@@ -1,4 +1,4 @@
-package edu.umich.robustdatacollector.scheduler;
+package edu.umich.robustdatacollector;
 
 /*
  * Author: Yihua Guo
@@ -15,12 +15,12 @@ import android.util.Log;
 public class TCPSettings {
 	static final String TAG = "TCP Settings";
 	
-	static final int TCP_SETTINGS_CONG_CTRL = 0;
-	static final int TCP_SETTINGS_ICW 		= 1;
-	static final int TCP_SETTINGS_RMEM 		= 2;
-	static final int TCP_SETTINGS_WMEM 		= 3;
-	static final int TCP_SETTINGS_TEST 		= 4;
-	static final int TCP_SETTINGS_IPROUTE 	= 5;
+	public static final int TCP_SETTINGS_CONG_CTRL = 0;
+	public static final int TCP_SETTINGS_ICW 		= 1;
+	public static final int TCP_SETTINGS_RMEM 		= 2;
+	public static final int TCP_SETTINGS_WMEM 		= 3;
+	public static final int TCP_SETTINGS_TEST 		= 4;
+	public static final int TCP_SETTINGS_IPROUTE 	= 5;
 	
 	static final int TCP_CONG_CTRL_RENO 		= 0;
 	static final int TCP_CONG_CTRL_CUBIC 		= 1;

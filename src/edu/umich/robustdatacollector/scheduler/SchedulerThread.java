@@ -18,6 +18,7 @@ import org.dom4j.io.SAXReader;
 import com.enterprisedt.net.ftp.FTPException;
 import com.enterprisedt.net.ftp.FileTransferClient;
 
+import edu.umich.robustdatacollector.TCPSettings;
 import edu.umich.robustdatacollector.Utilities;
 import edu.umich.robustdatacollector.imapcollector.IMAPCollector;
 import edu.umich.robustdatacollector.passivemonitoring.PassiveMonitoringService;
@@ -60,7 +61,7 @@ public class SchedulerThread extends Thread {
 	private static int TWO_UPLOADS_MIN_INTERVAL = 7200; // in seconds FENG_CHANGED, was 7200
 	private static int TWO_UPLOADS_MAX_INTERVAL = 86400; // in seconds
 	private static int TCP_CONG_CTRL = 1;
-	private static int TCP_ICW = 4;
+	public static int TCP_ICW = 4;
 	
 	private ResourceLock resourceLock = null;
 	private Context context = null;

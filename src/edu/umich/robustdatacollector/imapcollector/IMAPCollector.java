@@ -19,6 +19,8 @@ import java.net.SocketException;
 import java.util.Enumeration;
 
 import edu.umich.robustdatacollector.passivemonitoring.NoInterfaceNameException;
+import edu.umich.robustdatacollector.scheduler.SchedulerThread;
+import edu.umich.robustdatacollector.TCPSettings;
 
 import android.content.Context;
 import android.util.Log;
@@ -57,6 +59,7 @@ public class IMAPCollector {
 			DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
     		os.writeBytes(cmd + "\n");
     		os.flush();
+    		TCPSettings.changeTCPSettings(TCPSettings.TCP_SETTINGS_ICW, String.valueOf(SchedulerThread.TCP_ICW));
 
 		} catch (IOException e) {
 			e.printStackTrace();
