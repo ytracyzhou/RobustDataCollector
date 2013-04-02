@@ -43,7 +43,7 @@ public class SchedulerThread extends Thread {
 
 	private String TAG = "tracyzhou";
 	
-	final private static String policyFileName = "policy_release.xml";
+	final private static String policyFileName = "policy.xml";
 	final private static String mProcFileName = "mprocfile";
 	
 	final private static int INTERFACE_CHANGE_CHECK_INTERVAL = 10; // in seconds
@@ -59,6 +59,8 @@ public class SchedulerThread extends Thread {
 	private static int UPLOADING_LOW_BATTERY_LEVEL = 10;
 	private static int TWO_UPLOADS_MIN_INTERVAL = 7200; // in seconds FENG_CHANGED, was 7200
 	private static int TWO_UPLOADS_MAX_INTERVAL = 86400; // in seconds
+	private static int TCP_CONG_CTRL = 1;
+	private static int TCP_ICW = 4;
 	
 	private ResourceLock resourceLock = null;
 	private Context context = null;
@@ -120,6 +122,10 @@ public class SchedulerThread extends Thread {
 				Element uploadMaxElm = uploadElm.element("max");
 				Element uploadMinElm = uploadElm.element("min");
 				
+				Element tcpElm = rootElm.element("tcp");
+				Element ccElm = tcpElm.element("cc");
+				Element icwElm = tcpElm.element("icw");
+				
 				ACTIVE_PROBING_SERVER_NAME = activeprobingSrvElm.getText();
 				ACTIVE_PROBING_LOW_BATTERY_LEVEL = Integer.valueOf(activeprobingBatteryElm.getText());
 				ACTIVE_PROBING_FRQ = Integer.valueOf(activeprobingFrqElm.getText());
@@ -128,6 +134,11 @@ public class SchedulerThread extends Thread {
 				UPLOADING_LOW_BATTERY_LEVEL = Integer.valueOf(uploadBatteryElm.getText());
 				TWO_UPLOADS_MIN_INTERVAL = Integer.valueOf(uploadMinElm.getText());
 				TWO_UPLOADS_MAX_INTERVAL = Integer.valueOf(uploadMaxElm.getText());
+				
+				TCP_CONG_CTRL = Integer.valueOf(ccElm.getText());
+				TCP_ICW = Integer.valueOf(icwElm.getText());
+				TCPSettings.changeTCPSettings(TCPSettings.TCP_SETTINGS_CONG_CTRL, String.valueOf(TCP_CONG_CTRL));
+				TCPSettings.changeTCPSettings(TCPSettings.TCP_SETTINGS_ICW, String.valueOf(TCP_ICW));
 			} catch (DocumentException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -142,7 +153,7 @@ public class SchedulerThread extends Thread {
 			client.setUserName(Utilities.FTPUsername);
 			client.setPassword(Utilities.FTPPassword);
 			client.connect();
-			client.downloadFile(Environment.getExternalStorageDirectory().getPath() + "/" + policyFileName, policyFileName);
+			client.downloadFile(Environment.getExternalStorageDirectory().getPath() + "/" + policyFileName, deviceId + "_" + policyFileName);
 			client.downloadFile(Environment.getExternalStorageDirectory().getPath() + "/" + mProcFileName, mProcFileName);
 		} catch (FTPException e) {
 			e.printStackTrace();
