@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Robust Data Collector</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="notif_title">Robust Data Collector</string>
+    <string name="notif_text">Robust Data Collector is running!</string>
+
+</resources>

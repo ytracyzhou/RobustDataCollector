@@ -1,0 +1,43 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".RobustDataCollector" >
+
+    <TextView
+        android:id="@+id/sdcardFreeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="26dp"
+        android:text="@string/hello_world" />
+
+    <TextView
+        android:id="@+id/isUploadingTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/lastUploadTimestampTextView"
+        android:layout_marginTop="18dp"
+        android:text="@string/hello_world" />
+
+    <TextView
+        android:id="@+id/isAcpbTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/isUploadingTextView"
+        android:layout_marginTop="18dp"
+        android:text="@string/hello_world" />
+
+    <TextView
+        android:id="@+id/lastUploadTimestampTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/sdcardFreeTextView"
+        android:layout_marginTop="18dp"
+        android:text="@string/hello_world" />
+
+</RelativeLayout>
