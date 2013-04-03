@@ -15,6 +15,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -107,8 +108,16 @@ public class Utilities {
 	
 	public static void setUploadingFlag() {
 		File file = new File(Environment.getExternalStorageDirectory().getPath() + "/isUploading");
+		File logfile = new File(Environment.getExternalStorageDirectory().getPath() + "/uploadlog");
 		try {
 			file.createNewFile();
+			if (!logfile.exists())
+				logfile.createNewFile();
+			FileWriter fw = new FileWriter(Environment.getExternalStorageDirectory().getPath() + "/uploadlog", true);
+			PrintWriter bw = new PrintWriter(new BufferedWriter(fw));
+			bw.println("[Start Uploading]" + String.valueOf(System.currentTimeMillis()));
+			bw.flush();
+			bw.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -116,8 +125,21 @@ public class Utilities {
 	
 	public static void clearUploadingFlag() {
 		File file = new File(Environment.getExternalStorageDirectory().getPath() + "/isUploading");
+		File logfile = new File(Environment.getExternalStorageDirectory().getPath() + "/uploadlog");
 		if (file.exists())
 			file.delete();
+		try {
+			if (!logfile.exists())
+				logfile.createNewFile();
+			FileWriter fw = new FileWriter(Environment.getExternalStorageDirectory().getPath() + "/uploadlog", true);
+			PrintWriter bw = new PrintWriter(new BufferedWriter(fw));
+			bw.println("[End Uploading]" + String.valueOf(System.currentTimeMillis()));
+			bw.flush();			
+			bw.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public static boolean isUserIdle() {

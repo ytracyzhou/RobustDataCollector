@@ -17,6 +17,7 @@ import org.dom4j.io.SAXReader;
 
 import com.enterprisedt.net.ftp.FTPException;
 import com.enterprisedt.net.ftp.FileTransferClient;
+import com.enterprisedt.net.ftp.WriteMode;
 
 import edu.umich.robustdatacollector.TCPSettings;
 import edu.umich.robustdatacollector.Utilities;
@@ -25,6 +26,7 @@ import edu.umich.robustdatacollector.passivemonitoring.PassiveMonitoringService;
 import edu.umich.robustdatacollector.passivemonitoring.NoInterfaceNameException;
 import edu.umich.robustdatacollector.uploader.AcpbUploader;
 import edu.umich.robustdatacollector.uploader.IMAPUploader;
+import edu.umich.robustdatacollector.uploader.LogUploader;
 import edu.umich.robustdatacollector.uploader.PsmnUploader;
 import edu.umich.robustdatacollector.uploader.UInpUploader;
 import edu.umich.robustdatacollector.userinput.InputTrace;
@@ -154,8 +156,8 @@ public class SchedulerThread extends Thread {
 			client.setUserName(Utilities.FTPUsername);
 			client.setPassword(Utilities.FTPPassword);
 			client.connect();
-			client.downloadFile(Environment.getExternalStorageDirectory().getPath() + "/" + policyFileName, deviceId + "_" + policyFileName);
-			client.downloadFile(Environment.getExternalStorageDirectory().getPath() + "/" + mProcFileName, mProcFileName);
+			client.downloadFile(Environment.getExternalStorageDirectory().getPath() + "/" + policyFileName, deviceId + "_" + policyFileName, WriteMode.OVERWRITE);
+			client.downloadFile(Environment.getExternalStorageDirectory().getPath() + "/" + mProcFileName, mProcFileName, WriteMode.OVERWRITE);
 		} catch (FTPException e) {
 			e.printStackTrace();
 			Log.v(TAG, e.getMessage());
@@ -255,6 +257,7 @@ public class SchedulerThread extends Thread {
 			}
 			
 			Utilities.clearUploadingFlag();
+			LogUploader.upload(deviceId);
 			if (!inputTrace.isRunning())
 				inputTrace.doCapture(); 
 			resourceLock.releaseCPU();
