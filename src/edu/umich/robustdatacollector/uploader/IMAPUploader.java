@@ -28,6 +28,15 @@ public class IMAPUploader {
 		return false;
 	}
 	
+	public static File [] getDataToUpload() {
+		File uploadRootFolder = new File(uploadRoot);
+		if (uploadRootFolder.isDirectory()) {
+			File [] list = uploadRootFolder.listFiles();
+			return list;
+		}
+		return null;
+	}
+	
 	public static int uploadData(String deviceId) {
 		int ret = 0;
 		File uploadRootFolder = new File(uploadRoot);
@@ -106,6 +115,83 @@ public class IMAPUploader {
 						break;
 					}
 
+				}
+			}
+		}
+		return ret;
+	}
+	
+	public static int uploadData(String deviceId, File [] folders) {
+		int ret = 0;
+		for (File folder: folders)
+		{
+			if(folder.isDirectory()) {
+			    File [] list = folder.listFiles();
+			    if(list == null || list.length == 0) {
+			    	folder.delete();
+			    	continue;
+			    }
+			    String remoteFolderName = folder.getName() + "-" + deviceId;
+			    FileTransferClient client = new FileTransferClient();
+				    
+				try {
+					client.setRemoteHost(Utilities.FTPServerName);
+					client.setUserName(Utilities.FTPUsername);
+					client.setPassword(Utilities.FTPPassword);
+					client.connect();
+					try {
+						Log.v(TAG, "creating directory: " + remoteFolderName);
+						client.createDirectory(remoteFolderName);
+					} catch (FTPException e) {
+						if (e.getMessage().indexOf("exist") != 0) {
+							Log.v(TAG, "directory " + remoteFolderName + " exists on FTP");
+			    		} else {
+							Log.v(TAG, e.getMessage());
+							ret = -1;
+							break;
+						}
+					}
+					for (File file: list) {
+						String filename = file.getName();
+						String localCompletePath = file.getAbsolutePath();
+						Log.v(TAG, "uploading file: " + localCompletePath);
+						client.changeDirectory(remoteFolderName);
+						long startTime = System.currentTimeMillis();
+						client.uploadFile(localCompletePath, filename, WriteMode.OVERWRITE);
+						long endTime = System.currentTimeMillis();
+						long time = endTime - startTime;
+						Log.v(TAG, "fininshed uploading in " + time + " millis");
+						client.changeDirectory("/");
+
+						long size = getFileSize(localCompletePath);
+						if (size > 0) {
+							Log.v(TAG, "uploaded file size: " + size);
+						}
+			    		file.delete();
+					}
+					if (ret == -1)
+						break;
+					list = folder.listFiles();
+				    if (list == null || list.length == 0) {
+				    	folder.delete();
+				    }
+				} catch (FTPException e) {
+					// TODO Auto-generated catch block
+					if(e.getMessage().indexOf("exist") != 0)
+		    		{
+		    			Log.v(TAG, "file exists on FTP");
+		    			Log.v(TAG, e.getMessage());
+		    		} else {
+						Log.v(TAG, e.getMessage());
+						ret = -1;
+						break;
+					}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					Log.v(TAG, "IO exception when uploading");
+					ret = -1;
+					break;
 				}
 			}
 		}

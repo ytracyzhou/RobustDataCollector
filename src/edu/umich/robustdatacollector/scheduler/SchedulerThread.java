@@ -61,7 +61,7 @@ public class SchedulerThread extends Thread {
 	private static int TWO_UPLOADS_MIN_INTERVAL = 7200; // in seconds FENG_CHANGED, was 7200
 	private static int TWO_UPLOADS_MAX_INTERVAL = 86400; // in seconds
 	private static int TCP_CONG_CTRL = 1;
-	public static int TCP_ICW = 4;
+	public static int TCP_ICW = 10;
 	
 	private ResourceLock resourceLock = null;
 	private Context context = null;
@@ -206,57 +206,58 @@ public class SchedulerThread extends Thread {
 
 		if (toUpload) {
 			resourceLock.acquireCPU();
+			downloadConfig();
+			parsePolicyFile();
 			imapCollector.stopCollectingIMAPData();
 			Intent passiveMonitoringServiceIntent = new Intent(context, PassiveMonitoringService.class);
 			context.stopService(passiveMonitoringServiceIntent);
 			inputTrace.stopCapture();
 			Utilities.setUploadingFlag();
-			doUpload();
-			Utilities.clearUploadingFlag();
+			
+			File [] imapList = IMAPUploader.getDataToUpload();
 			try {
 				imapCollector.startCollectingIMAPData(interfaceDetector.getCurrentInterfaceType());
 			} catch (NoInterfaceNameException e) {
 				e.printStackTrace();
 			}
+			
+			File [] psmnList = PsmnUploader.getDataToUpload();
 			context.startService(passiveMonitoringServiceIntent);
-			if (!inputTrace.isRunning())
-				inputTrace.doCapture();
-			resourceLock.releaseCPU();
-		}
-	}
-	
-	private void doUpload() {
-		downloadConfig();
-		parsePolicyFile();
-		int uploadFailureCount = 0;
-		while (IMAPUploader.hasData() || PsmnUploader.hasData() || AcpbUploader.hasData() || UInpUploader.hasData()) {
-			if (level <= UPLOADING_LOW_BATTERY_LEVEL && plugged <= 0) {
-				hasError = true;
-				lastErrorTimestamp = System.currentTimeMillis();
-				break;
-			}
-			int error1 = IMAPUploader.uploadData(deviceId);
-			int error2 = PsmnUploader.uploadData(deviceId);
-			int error3 = AcpbUploader.uploadData(deviceId);
-			int error4 = UInpUploader.uploadData(deviceId);
-			Log.v(TAG, "error1: " + error1 + ", error2: " + error2 + ", error3: " + error3 + ", error4: " + error4);
-			if (error1 != 0 || error2 != 0 || error3 != 0 || error4 != 0) {
-				uploadFailureCount++;
-				if (uploadFailureCount >= 3) {
+			
+			if ((imapList != null && imapList.length != 0) || (psmnList != null && psmnList.length != 0)
+					|| AcpbUploader.hasData() || UInpUploader.hasData()) {
+				
+				if (level <= UPLOADING_LOW_BATTERY_LEVEL && plugged <= 0) {
 					hasError = true;
 					lastErrorTimestamp = System.currentTimeMillis();
-					break;
+					return;
 				}
-				try {
-					Thread.sleep(10000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+				int error1 = IMAPUploader.uploadData(deviceId, imapList);
+				int error2 = PsmnUploader.uploadData(deviceId, psmnList);
+				int error3 = AcpbUploader.uploadData(deviceId);
+				int error4 = UInpUploader.uploadData(deviceId);
+				Log.v(TAG, "error1: " + error1 + ", error2: " + error2 + ", error3: " + error3 + ", error4: " + error4);
+				if (error1 != 0 || error2 != 0 || error3 != 0 || error4 != 0) {
+					error1 = IMAPUploader.uploadData(deviceId, imapList);
+					error2 = PsmnUploader.uploadData(deviceId, psmnList);
+					error3 = AcpbUploader.uploadData(deviceId);
+					error4 = UInpUploader.uploadData(deviceId);
+					Log.v(TAG, "error1: " + error1 + ", error2: " + error2 + ", error3: " + error3 + ", error4: " + error4);
+					if (error1 != 0 || error2 != 0 || error3 != 0 || error4 != 0) {
+						hasError = true;
+						lastErrorTimestamp = System.currentTimeMillis();
+					} else {
+						Utilities.setLastUploadTimestamp(System.currentTimeMillis());
+					}
+				} else {
+					Utilities.setLastUploadTimestamp(System.currentTimeMillis());
 				}
-				continue;
-			} else {
-				uploadFailureCount = 0;
-				Utilities.setLastUploadTimestamp(System.currentTimeMillis());
 			}
+			
+			Utilities.clearUploadingFlag();
+			if (!inputTrace.isRunning())
+				inputTrace.doCapture(); 
+			resourceLock.releaseCPU();
 		}
 	}
 	
@@ -346,7 +347,7 @@ public class SchedulerThread extends Thread {
 
 						long lastUploadTimestamp = Utilities.getLastUploadTimestamp();
 						long diff = curTime - lastUploadTimestamp;
-						Log.v(TAG, "time elapsed, curTime: " + curTime + " - " + lastUploadTimestamp + " = " + diff);
+						Log.v(TAG, "time elapsed: " + diff);
 						if (diff < TWO_UPLOADS_MIN_INTERVAL * 1000) {
 							shouldWait = true;
 						}

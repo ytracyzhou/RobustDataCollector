@@ -52,7 +52,7 @@ public class IMAPCollector {
 		{
 			throw new NoInterfaceNameException();
 		}
-		String cmd = "/data/local/imap-tcpdump -i " + interfaceName + " -C 1000 not src 141.212.108.135 and not dst 141.212.108.135 2>> /sdcard/imap.output";
+		String cmd = "/data/local/imap-tcpdump -i " + interfaceName + " -C 1000 not src 141.212.110.239 and not dst 141.212.110.239 2>> /sdcard/imap.output";
 		try {
 			Log.v("tracyzhou", id + "  Starting imap with cmd: " + cmd);
 			
