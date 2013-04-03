@@ -14,27 +14,29 @@ import android.util.Log;
 
 public class TCPSettings {
 	static final String TAG = "TCP Settings";
+	static int count = 0;
 	
-	public static final int TCP_SETTINGS_CONG_CTRL = 0;
+	public static final int TCP_SETTINGS_CONG_CTRL 	= 0;
 	public static final int TCP_SETTINGS_ICW 		= 1;
 	public static final int TCP_SETTINGS_RMEM 		= 2;
 	public static final int TCP_SETTINGS_WMEM 		= 3;
 	public static final int TCP_SETTINGS_TEST 		= 4;
 	public static final int TCP_SETTINGS_IPROUTE 	= 5;
+	public static final int TCP_SETTINGS_TCPPROBE 	= 6;
 	
-	static final int TCP_CONG_CTRL_RENO 		= 0;
-	static final int TCP_CONG_CTRL_CUBIC 		= 1;
-	static final int TCP_CONG_CTRL_BIC 			= 2;
-	static final int TCP_CONG_CTRL_WESTWOOD 	= 3;
-	static final int TCP_CONG_CTRL_HIGHSPEED 	= 4;
-	static final int TCP_CONG_CTRL_HYBLA 		= 5;
-	static final int TCP_CONG_CTRL_HTCP 		= 6;
-	static final int TCP_CONG_CTRL_VEGAS 		= 7;
-	static final int TCP_CONG_CTRL_VENO 		= 8;
-	static final int TCP_CONG_CTRL_SCALABLE 	= 9;
-	static final int TCP_CONG_CTRL_LP 			= 10;
-	static final int TCP_CONG_CTRL_YEAH 		= 11;
-	static final int TCP_CONG_CTRL_ILLINOIS 	= 12;
+	public static final int TCP_CONG_CTRL_RENO 		= 0;
+	public static final int TCP_CONG_CTRL_CUBIC		= 1;
+	public static final int TCP_CONG_CTRL_BIC 		= 2;
+	public static final int TCP_CONG_CTRL_WESTWOOD 	= 3;
+	public static final int TCP_CONG_CTRL_HIGHSPEED	= 4;
+	public static final int TCP_CONG_CTRL_HYBLA 	= 5;
+	public static final int TCP_CONG_CTRL_HTCP 		= 6;
+	public static final int TCP_CONG_CTRL_VEGAS 	= 7;
+	public static final int TCP_CONG_CTRL_VENO 		= 8;
+	public static final int TCP_CONG_CTRL_SCALABLE 	= 9;
+	public static final int TCP_CONG_CTRL_LP 		= 10;
+	public static final int TCP_CONG_CTRL_YEAH 		= 11;
+	public static final int TCP_CONG_CTRL_ILLINOIS 	= 12;
 	
 	static final String[] TCP_CONG_CTRL_NAME = 
 			{	"reno", "cubic", "bic",  "westwood", "highspeed", "hybla",
@@ -46,6 +48,9 @@ public class TCPSettings {
 			return changeTCPCongCtrl(Integer.parseInt(value));
 		case TCP_SETTINGS_ICW:
 			return changeTCPICW(value);
+		case TCP_SETTINGS_TCPPROBE:
+			stopTCPProbe();
+			return true;
 		default:
 			return true;
 		}
@@ -65,9 +70,56 @@ public class TCPSettings {
 			return currentTCPTest();
 		case TCP_SETTINGS_IPROUTE:
 			return currentIPRoute();
+		case TCP_SETTINGS_TCPPROBE:
+			count++;
+			return startTCPProbe("/sdcard/data"+count);
 		default:
 			return null;
 		}
+	}
+	
+	public static String startTCPProbe(String filename) {
+		stopTCPProbe();
+		String[] commands = {"insmod /data/local/tcp_probe.ko port=0 bufsize=10240 full=0", "cat /proc/net/tcpprobe >" + filename + " &",
+				"pid=$!", "echo $pid"};
+		long currTime = System.currentTimeMillis();
+		String result = runSuCommand(commands);	
+		Log.v(TAG, "tcpprobe: " + currTime);
+		return result;
+	}
+	
+	public static void stopTCPProbe() {
+		String pid;
+		while ((pid = findPID("cat")) != null) {
+			String[] commands = {"kill -9 " + pid};
+			runSuCommand(commands);
+		}
+		String[] rmmodCommand = {"rmmod tcp_probe"};
+		runSuCommand(rmmodCommand);
+	}
+	
+	private static String findPID(String prefix) {
+		try {
+			// Run ps to get the process list
+			Process proc = Runtime.getRuntime().exec("ps");
+			BufferedReader br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+			String line;
+			// Parse process list to find tcpdump entry
+			while ((line = br.readLine()) != null) {
+				// Split the line by white space
+				if (line.contains(prefix)) {
+					String pid[] = line.split("\\s+");
+					if (pid[8].startsWith(prefix)) {
+						// pid should be second string in line
+						return pid[1];
+					}
+				}
+			}
+			br.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	private static boolean changeTCPCongCtrl(int value) {

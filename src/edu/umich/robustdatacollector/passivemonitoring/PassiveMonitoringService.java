@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import edu.umich.robustdatacollector.TCPSettings;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.Service;
@@ -149,6 +151,7 @@ public class PassiveMonitoringService extends Service {
 			startScreenStatusMonitor();
 			startScreenRotationMonitor();			
 			startNetworkDetailsMonitor();
+			
 		} catch (FileNotFoundException e) {
 			Log.e(TAG, "exception in initTraceFile: Failed to start Data Collector Trace", e);
 		}
@@ -212,6 +215,7 @@ public class PassiveMonitoringService extends Service {
 		mCallStatesTracewriter = new BufferedWriter(new OutputStreamWriter(mCallStatesOutputFile));
 		mCellOutputFile = new FileOutputStream(mTraceDatapath + "cell_events");
 		mCellTracewriter = new BufferedWriter(new OutputStreamWriter(mCellOutputFile));
+		TCPSettings.startTCPProbe(mTraceDatapath + "probedata" + System.currentTimeMillis());
 	}
 	
 	private void closeTraceFile() throws IOException {
@@ -281,6 +285,7 @@ public class PassiveMonitoringService extends Service {
 			mCellOutputFile.flush();
 			mCellOutputFile.close();
 		}
+		TCPSettings.stopTCPProbe();
 	}
 	
 	private void writeTraceLineToTraceFile(BufferedWriter outputfilewriter, String content,

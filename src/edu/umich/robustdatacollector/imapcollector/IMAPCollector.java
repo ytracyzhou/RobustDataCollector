@@ -54,13 +54,13 @@ public class IMAPCollector {
 		}
 		String cmd = "/data/local/imap-tcpdump -i " + interfaceName + " -C 1000 not src 141.212.110.239 and not dst 141.212.110.239 2>> /sdcard/imap.output";
 		try {
-			Log.v("tracyzhou", id + "  Starting imap with cmd: " + cmd);
+			Log.v("tracyzhou", id + " Starting imap with cmd: " + cmd);
 			
 			DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
     		os.writeBytes(cmd + "\n");
     		os.flush();
     		TCPSettings.changeTCPSettings(TCPSettings.TCP_SETTINGS_ICW, String.valueOf(SchedulerThread.TCP_ICW));
-
+    		
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

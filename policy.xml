@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<datacollector>
+	<activeprobing>
+	    <battery>15</battery>
+		<servername>owl.eecs.umich.edu</servername>
+	    <frequency>600</frequency>
+		<afterfrequency>600</afterfrequency>
+	</activeprobing>
+	<upload>
+	    <battery>10</battery>
+		<max>86400</max>
+		<min>7200</min>
+	</upload>
+	<tcp>
+	    <ca>1</ca>
+		<icw>10</icw>
+	</tcp>
+</<datacollector>
