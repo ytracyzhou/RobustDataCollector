@@ -123,6 +123,9 @@ public class TCPSettings {
 	}
 	
 	private static boolean changeTCPCongCtrl(int value) {
+		String allVariant = currentTCPinProc("available_congestion_control").split("\n")[0];
+		String[] command = {"echo \"" + allVariant + "\" > /proc/sys/net/ipv4/tcp_allowed_congestion_control"};
+		runSuCommand(command);	
 		String variant = TCP_CONG_CTRL_NAME[value];
 		String[] commands = {"echo \"" + variant + "\" > /proc/sys/net/ipv4/tcp_congestion_control"};
 		runSuCommand(commands);	
