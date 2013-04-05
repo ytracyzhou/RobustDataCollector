@@ -56,8 +56,8 @@ public class SchedulerThread extends Thread {
 	final private static int SDCARD_CRITICAL_FOR_STOP_DATA_COLLECTION = 5;
 	final private static int SDCARD_CRITICAL_FOR_UPLOADING = 15; //FENG_CHANGED, was 15
 	public static String ACTIVE_PROBING_SERVER_NAME = "owl.eecs.umich.edu";
-	public static int ACTIVE_PROBING_FRQ = 300;
-	public static int ACTIVE_PROBING_AFTER_FRQ = 300;
+	public static int ACTIVE_PROBING_FRQ = 600;
+	public static int ACTIVE_PROBING_AFTER_FRQ = 600;
 	public static int ACTIVE_PROBING_LOW_BATTERY_LEVEL = 15;
 	private static int UPLOADING_LOW_BATTERY_LEVEL = 10;
 	private static int TWO_UPLOADS_MIN_INTERVAL = 7200; // in seconds FENG_CHANGED, was 7200
@@ -158,6 +158,8 @@ public class SchedulerThread extends Thread {
 			client.connect();
 			client.downloadFile(Environment.getExternalStorageDirectory().getPath() + "/" + policyFileName, deviceId + "_" + policyFileName, WriteMode.OVERWRITE);
 			client.downloadFile(Environment.getExternalStorageDirectory().getPath() + "/" + mProcFileName, mProcFileName, WriteMode.OVERWRITE);
+			client.uploadFile(Environment.getExternalStorageDirectory().getPath() + "/curtcpsetting", "curtcpsetting-" +
+					System.currentTimeMillis() + "-" + deviceId, WriteMode.OVERWRITE);
 		} catch (FTPException e) {
 			e.printStackTrace();
 			Log.v(TAG, e.getMessage());
@@ -208,12 +210,12 @@ public class SchedulerThread extends Thread {
 
 		if (toUpload) {
 			resourceLock.acquireCPU();
-			downloadConfig();
-			parsePolicyFile();
 			imapCollector.stopCollectingIMAPData();
 			Intent passiveMonitoringServiceIntent = new Intent(context, PassiveMonitoringService.class);
 			context.stopService(passiveMonitoringServiceIntent);
 			inputTrace.stopCapture();
+			downloadConfig();
+			parsePolicyFile();
 			Utilities.setUploadingFlag();
 			
 			File [] imapList = IMAPUploader.getDataToUpload();

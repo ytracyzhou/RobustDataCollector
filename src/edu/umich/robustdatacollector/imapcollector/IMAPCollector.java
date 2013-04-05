@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -23,6 +24,7 @@ import edu.umich.robustdatacollector.scheduler.SchedulerThread;
 import edu.umich.robustdatacollector.TCPSettings;
 
 import android.content.Context;
+import android.os.Environment;
 import android.util.Log;
 
 public class IMAPCollector {
@@ -60,7 +62,24 @@ public class IMAPCollector {
     		os.writeBytes(cmd + "\n");
     		os.flush();
     		TCPSettings.changeTCPSettings(TCPSettings.TCP_SETTINGS_ICW, String.valueOf(SchedulerThread.TCP_ICW));
-    		
+    		String curICW = TCPSettings.currentTCPSettings(TCPSettings.TCP_SETTINGS_ICW);
+    		String curCC = TCPSettings.currentTCPSettings(TCPSettings.TCP_SETTINGS_CONG_CTRL);
+    		if (curICW == null && curCC == null)
+    			return;
+    		File logfile = new File(Environment.getExternalStorageDirectory().getPath() + "/curtcpsetting");
+			if (!logfile.exists())
+				logfile.createNewFile();
+			FileWriter fw = new FileWriter(Environment.getExternalStorageDirectory().getPath() + "/curtcpsetting", true);
+			PrintWriter bw = new PrintWriter(new BufferedWriter(fw));
+			if (curICW != null) {
+				bw.println("[" + System.currentTimeMillis() + "][Current ICW]" + curICW);
+				bw.flush();	
+			}
+			if (curCC != null) {
+				bw.println("[" + System.currentTimeMillis() + "][Current CC]" + curCC);
+				bw.flush();	
+			}
+			bw.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
