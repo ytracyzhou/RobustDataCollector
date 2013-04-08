@@ -182,6 +182,10 @@ public class SchedulerThread extends Thread {
 	}
 	
 	private void upload() {
+		if (interfaceDetector.isWifiOn() || interfaceDetector.is4GOn() || interfaceDetector.is3GOn()) {
+			downloadConfig();
+			parsePolicyFile();
+		}
 		boolean hasData1 = IMAPUploader.hasData();
 		boolean hasData2 = PsmnUploader.hasData();
 		boolean hasData3 = AcpbUploader.hasData();
@@ -214,8 +218,7 @@ public class SchedulerThread extends Thread {
 			Intent passiveMonitoringServiceIntent = new Intent(context, PassiveMonitoringService.class);
 			context.stopService(passiveMonitoringServiceIntent);
 			inputTrace.stopCapture();
-			downloadConfig();
-			parsePolicyFile();
+
 			Utilities.setUploadingFlag();
 			
 			File [] imapList = IMAPUploader.getDataToUpload();
@@ -339,6 +342,7 @@ public class SchedulerThread extends Thread {
 				}
 				
 				if (sleepTimeTotal % DATA_UPLOAD_CHECK_INTERVAL == 0) {
+
 					if (!Utilities.readAcpbFlag()) {
 						long curTime = System.currentTimeMillis();
 						boolean shouldWait = false;
