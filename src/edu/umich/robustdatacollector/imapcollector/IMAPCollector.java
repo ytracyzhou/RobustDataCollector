@@ -64,7 +64,10 @@ public class IMAPCollector {
     		TCPSettings.changeTCPSettings(TCPSettings.TCP_SETTINGS_ICW, String.valueOf(SchedulerThread.TCP_ICW));
     		String curICW = TCPSettings.currentTCPSettings(TCPSettings.TCP_SETTINGS_ICW);
     		String curCC = TCPSettings.currentTCPSettings(TCPSettings.TCP_SETTINGS_CONG_CTRL);
-    		if (curICW == null && curCC == null)
+    		String curRMEM = TCPSettings.currentTCPSettings(TCPSettings.TCP_SETTINGS_RMEM);
+    		String curWMEM = TCPSettings.currentTCPSettings(TCPSettings.TCP_SETTINGS_WMEM);
+    		String curIProute = TCPSettings.currentTCPSettings(TCPSettings.TCP_SETTINGS_IPROUTE);
+    		if (curICW == null && curCC == null && curRMEM == null && curWMEM == null && curIProute == null)
     			return;
     		File logfile = new File(Environment.getExternalStorageDirectory().getPath() + "/curtcpsetting");
 			if (!logfile.exists())
@@ -77,6 +80,18 @@ public class IMAPCollector {
 			}
 			if (curCC != null) {
 				bw.println("[" + System.currentTimeMillis() + "][Current CC]" + curCC);
+				bw.flush();	
+			}
+			if (curRMEM != null) {
+				bw.println("[" + System.currentTimeMillis() + "][Current RMEM]" + curRMEM);
+				bw.flush();	
+			}
+			if (curWMEM != null) {
+				bw.println("[" + System.currentTimeMillis() + "][Current WMEM]" + curWMEM);
+				bw.flush();	
+			}
+			if (curIProute != null) {
+				bw.println("[" + System.currentTimeMillis() + "][Current IProute]" + curIProute);
 				bw.flush();	
 			}
 			bw.close();

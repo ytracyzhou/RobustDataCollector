@@ -45,14 +45,34 @@ public class TCPSettings {
 	public static boolean changeTCPSettings(int settings, String value) {
 		switch (settings) { 
 		case TCP_SETTINGS_CONG_CTRL:
-			return changeTCPCongCtrl(Integer.parseInt(value));
+			for (int i = 0; i < 5; i++) {
+				if (changeTCPCongCtrl(Integer.parseInt(value)))
+					return true;
+			}
+			return false;
 		case TCP_SETTINGS_ICW:
-			return changeTCPICW(value);
+			for (int i = 0; i < 5; i++) {
+				if (changeTCPICW(value))
+					return true;
+			}
+			return false;
+		case TCP_SETTINGS_RMEM:
+			for (int i = 0; i < 5; i++) {
+				if (changeTCPRmem(value))
+					return true;
+			}
+			return false;
+		case TCP_SETTINGS_WMEM:
+			for (int i = 0; i < 5; i++) {
+				if (changeTCPWmem(value))
+					return true;
+			}
+			return false;
 		case TCP_SETTINGS_TCPPROBE:
 			stopTCPProbe();
 			return true;
 		default:
-			return true;
+			return false;
 		}
 	}
 	
@@ -71,8 +91,7 @@ public class TCPSettings {
 		case TCP_SETTINGS_IPROUTE:
 			return currentIPRoute();
 		case TCP_SETTINGS_TCPPROBE:
-			count++;
-			return startTCPProbe("/sdcard/data"+count);
+			return startTCPProbe("/sdcard/probedata_"+System.currentTimeMillis());
 		default:
 			return null;
 		}
@@ -164,6 +183,14 @@ public class TCPSettings {
 		return false;
 	}
 	
+	private static boolean changeTCPRmem(String value) {
+		return changeTCPinProc("rmem", value);
+	}
+	
+	private static boolean changeTCPWmem(String value) {
+		return changeTCPinProc("wmem", value);
+	}
+	
 	private static boolean changeTCPinProc(String settings, String value) {
 		String[] commands = {"echo \"" + value + "\" > /proc/sys/net/ipv4/tcp_" + settings};
 		runSuCommand(commands);	
@@ -199,7 +226,7 @@ public class TCPSettings {
 				}
 			}
 		}
-		return null;
+		return "10";
 	}
 	
 	private static String currentIPRoute() {
