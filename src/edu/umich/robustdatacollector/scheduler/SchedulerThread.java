@@ -239,23 +239,17 @@ public class SchedulerThread extends Thread {
 					lastErrorTimestamp = System.currentTimeMillis();
 					return;
 				}
-				int error1 = IMAPUploader.uploadData(deviceId, imapList);
-				int error2 = PsmnUploader.uploadData(deviceId, psmnList);
+				long uploadStartTime = System.currentTimeMillis();
+				int error1 = IMAPUploader.uploadData(deviceId, imapList, uploadStartTime);
+				uploadStartTime = System.currentTimeMillis();
+				int error2 = PsmnUploader.uploadData(deviceId, psmnList, uploadStartTime);
 				int error3 = AcpbUploader.uploadData(deviceId);
-				int error4 = UInpUploader.uploadData(deviceId);
+				uploadStartTime = System.currentTimeMillis();
+				int error4 = UInpUploader.uploadData(deviceId, uploadStartTime);
 				Log.v(TAG, "error1: " + error1 + ", error2: " + error2 + ", error3: " + error3 + ", error4: " + error4);
 				if (error1 != 0 || error2 != 0 || error3 != 0 || error4 != 0) {
-					error1 = IMAPUploader.uploadData(deviceId, imapList);
-					error2 = PsmnUploader.uploadData(deviceId, psmnList);
-					error3 = AcpbUploader.uploadData(deviceId);
-					error4 = UInpUploader.uploadData(deviceId);
-					Log.v(TAG, "error1: " + error1 + ", error2: " + error2 + ", error3: " + error3 + ", error4: " + error4);
-					if (error1 != 0 || error2 != 0 || error3 != 0 || error4 != 0) {
-						hasError = true;
-						lastErrorTimestamp = System.currentTimeMillis();
-					} else {
-						Utilities.setLastUploadTimestamp(System.currentTimeMillis());
-					}
+					hasError = true;
+					lastErrorTimestamp = System.currentTimeMillis();
 				} else {
 					Utilities.setLastUploadTimestamp(System.currentTimeMillis());
 				}

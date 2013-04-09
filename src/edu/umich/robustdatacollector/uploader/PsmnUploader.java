@@ -2,6 +2,7 @@ package edu.umich.robustdatacollector.uploader;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Calendar;
 
 import com.enterprisedt.net.ftp.FTPException;
 import com.enterprisedt.net.ftp.FileTransferClient;
@@ -128,9 +129,16 @@ public class PsmnUploader {
 		return ret;
 	}
 	
-	public static int uploadData(String deviceId, File [] folders) {
+	public static int uploadData(String deviceId, File [] folders, long uploadStartTime) {
 		int ret = 0;
 		for (File folder: folders) {
+			Calendar calendar = Calendar.getInstance();
+			int hour = calendar.get(Calendar.HOUR_OF_DAY);
+			if (hour >= 0 && hour <= 6) {
+				
+			} else if (System.currentTimeMillis() - uploadStartTime > 10 * 60 * 1000) {
+				break;
+			}
 			if(folder.isDirectory()) {
 				File [] list = folder.listFiles();
 				if(list == null || list.length == 0) {
