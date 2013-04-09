@@ -9,6 +9,7 @@ import com.enterprisedt.net.ftp.FileTransferClient;
 import com.enterprisedt.net.ftp.WriteMode;
 
 import edu.umich.robustdatacollector.Utilities;
+import edu.umich.robustdatacollector.scheduler.SchedulerThread;
 
 import android.os.Environment;
 import android.util.Log;
@@ -128,9 +129,9 @@ public class IMAPUploader {
 		{
 			Calendar calendar = Calendar.getInstance();
 			int hour = calendar.get(Calendar.HOUR_OF_DAY);
-			if (hour >= 0 && hour <= 6) {
+			if (hour >= 2 && hour <= 7) {
 				
-			} else if (System.currentTimeMillis() - uploadStartTime > 15 * 60 * 1000) {
+			} else if (System.currentTimeMillis() - uploadStartTime > SchedulerThread.UPLOADING_IMAP_DURATION * 1000) {
 				break;
 			}
 			if(folder.isDirectory()) {

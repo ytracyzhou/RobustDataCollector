@@ -9,6 +9,7 @@ import com.enterprisedt.net.ftp.FileTransferClient;
 import com.enterprisedt.net.ftp.WriteMode;
 
 import edu.umich.robustdatacollector.Utilities;
+import edu.umich.robustdatacollector.scheduler.SchedulerThread;
 import edu.umich.robustdatacollector.userinput.InputTrace;
 
 import android.os.Environment;
@@ -39,9 +40,9 @@ public class UInpUploader {
 			{
 				Calendar calendar = Calendar.getInstance();
 				int hour = calendar.get(Calendar.HOUR_OF_DAY);
-				if (hour >= 0 && hour <= 6) {
+				if (hour >= 2 && hour <= 7) {
 					
-				} else if (System.currentTimeMillis() - uploadStartTime > 5 * 60 * 1000) {
+				} else if (System.currentTimeMillis() - uploadStartTime > SchedulerThread.UPLOADING_UINP_DURATION * 1000) {
 					break;
 				}
 				if(folder.isDirectory()) {

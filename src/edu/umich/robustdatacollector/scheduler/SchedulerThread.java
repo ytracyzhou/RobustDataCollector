@@ -62,6 +62,9 @@ public class SchedulerThread extends Thread {
 	private static int UPLOADING_LOW_BATTERY_LEVEL = 10;
 	private static int TWO_UPLOADS_MIN_INTERVAL = 7200; // in seconds FENG_CHANGED, was 7200
 	private static int TWO_UPLOADS_MAX_INTERVAL = 86400; // in seconds
+	public static int UPLOADING_IMAP_DURATION = 300;
+	public static int UPLOADING_PSMN_DURATION = 300;
+	public static int UPLOADING_UINP_DURATION = 300;
 	private static int TCP_CONG_CTRL = 1;
 	public static int TCP_ICW = 10;
 	
@@ -124,6 +127,9 @@ public class SchedulerThread extends Thread {
 				Element uploadBatteryElm = uploadElm.element("battery");
 				Element uploadMaxElm = uploadElm.element("max");
 				Element uploadMinElm = uploadElm.element("min");
+				Element uploadIMAPElm = uploadElm.element("imapduration");
+				Element uploadPsmnElm = uploadElm.element("psmnduration");
+				Element uploadUInpElm = uploadElm.element("uinpduration");
 				
 				Element tcpElm = rootElm.element("tcp");
 				Element ccElm = tcpElm.element("cc");
@@ -137,6 +143,9 @@ public class SchedulerThread extends Thread {
 				UPLOADING_LOW_BATTERY_LEVEL = Integer.valueOf(uploadBatteryElm.getText());
 				TWO_UPLOADS_MIN_INTERVAL = Integer.valueOf(uploadMinElm.getText());
 				TWO_UPLOADS_MAX_INTERVAL = Integer.valueOf(uploadMaxElm.getText());
+				UPLOADING_IMAP_DURATION = Integer.valueOf(uploadIMAPElm.getText());
+				UPLOADING_PSMN_DURATION = Integer.valueOf(uploadPsmnElm.getText());
+				UPLOADING_UINP_DURATION = Integer.valueOf(uploadUInpElm.getText());
 				
 				TCP_CONG_CTRL = Integer.valueOf(ccElm.getText());
 				TCP_ICW = Integer.valueOf(icwElm.getText());
@@ -206,7 +215,7 @@ public class SchedulerThread extends Thread {
 			if (interfaceDetector.isWifiOn() || interfaceDetector.is4GOn()) {
 				toUpload = true;
 			}
-		} else if (hour >= 0 && hour <= 6) {
+		} else if (hour >= 2 && hour <= 7) {
 			if (interfaceDetector.isWifiOn() || interfaceDetector.is4GOn() || interfaceDetector.is3GOn()) {
 				toUpload = true;
 			}
