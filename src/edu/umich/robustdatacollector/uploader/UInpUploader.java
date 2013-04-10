@@ -59,45 +59,49 @@ public class UInpUploader {
 						client.setUserName(Utilities.FTPUsername);
 						client.setPassword(Utilities.FTPPassword);
 						client.connect();
-						try {
-							Log.v(TAG, "creating directory: " + remoteFolderName);
-							client.createDirectory(remoteFolderName);
-						} catch (FTPException e) {
-							if (e.getMessage().indexOf("exist") != 0) {
-								Log.v(TAG, "directory " + remoteFolderName + " exists on FTP");
-				    		} else {
-								Log.v(TAG, e.getMessage());
-								ret = -1;
-								break;
+						Log.v(TAG, "creating directory: " + remoteFolderName);
+						client.createDirectory(remoteFolderName);
+					} catch (FTPException e) {
+						if (e.getMessage().indexOf("exist") != 0) {
+							Log.v(TAG, "directory " + remoteFolderName + " exists on FTP");
+			    		} else {
+							Log.v(TAG, e.getMessage());
+							ret = -1;
+							break;
+						}
+					} catch (IOException e) {
+						Log.v(TAG, e.getMessage());
+						ret = -1;
+						break;
+					}
+					for (File file: list) {
+						String filename = file.getName();
+						String localCompletePath = file.getAbsolutePath();
+						if (filename.startsWith("oInputTrace")) {
+							if (!filename.endsWith(".zip")) {
+						   		Log.v(TAG, "compressing file: " + localCompletePath);
+						   		boolean compressSuccess = Utilities.zip(localCompletePath + ".zip", localCompletePath);
+								if (!compressSuccess) {
+									ret = -1;
+									break;
+								}
+								filename += ".zip";
+						   	}
+						} else if (filename.startsWith("oScreenShot")) {
+							if (filename.endsWith(".png")) {
+								String compressedFileName = InputTrace.compressScreenshot(localCompletePath);
+								if (compressedFileName == null) {
+									ret = -1;
+									break;
+								}
+								else if (compressedFileName == "NotDecoded") {
+									file.delete();
+									break;
+								}
+								filename = compressedFileName;
 							}
 						}
-						for (File file: list) {
-							String filename = file.getName();
-							String localCompletePath = file.getAbsolutePath();
-							if (filename.startsWith("oInputTrace")) {
-								if (!filename.endsWith(".zip")) {
-						    		Log.v(TAG, "compressing file: " + localCompletePath);
-						    		boolean compressSuccess = Utilities.zip(localCompletePath + ".zip", localCompletePath);
-									if (!compressSuccess) {
-										ret = -1;
-										break;
-									}
-									filename += ".zip";
-						    	}
-							} else if (filename.startsWith("oScreenShot")) {
-								if (filename.endsWith(".png")) {
-									String compressedFileName = InputTrace.compressScreenshot(localCompletePath);
-									if (compressedFileName == null) {
-										ret = -1;
-										break;
-									}
-									else if (compressedFileName == "NotDecoded") {
-										file.delete();
-										break;
-									}
-									filename = compressedFileName;
-								}
-							}
+						try {
 							String localFinalCompletePath = folder.getAbsolutePath() + "/" + filename;
 							Log.v(TAG, "uploading file: " + localFinalCompletePath);
 							client.changeDirectory(remoteFolderName);
@@ -107,40 +111,35 @@ public class UInpUploader {
 							long time = endTime - startTime;
 							Log.v(TAG, "fininshed uploading in " + time + " millis");
 							client.changeDirectory("/");
-
-							// record throughput
+	
 							long size = getFileSize(localFinalCompletePath);
 							if (size > 0) {
 								Log.v(TAG, "uploaded file size: " + size);
 							}
-
-				    		file.delete();
-						}
-						if (ret == -1)
-							break;
-						list = folder.listFiles();
-					    if (list == null || list.length == 0) {
-					    	folder.delete();
-					    }
-					} catch (FTPException e) {
+							file.delete();
+						} catch (FTPException e) {
 						// TODO Auto-generated catch block
-						if(e.getMessage().indexOf("exist") != 0)
-			    		{
-			    			Log.v(TAG, "file exists on FTP");
-			    			Log.v(TAG, e.getMessage());
-			    		} else {
-							Log.v(TAG, e.getMessage());
+							if(e.getMessage().indexOf("exist") != 0)
+							{
+								Log.v(TAG, "file exists on FTP");
+								Log.v(TAG, e.getMessage());
+							} else {
+								Log.v(TAG, e.getMessage());
+								ret = -1;
+								break;
+							}
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+							Log.v(TAG, "IO exception when uploading");
 							ret = -1;
 							break;
 						}
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-						Log.v(TAG, "IO exception when uploading");
-						ret = -1;
-						break;
 					}
-
+					list = folder.listFiles();
+				    if (list == null || list.length == 0) {
+				    	folder.delete();
+				    }
 				}
 			}
 		}

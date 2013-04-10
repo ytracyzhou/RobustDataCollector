@@ -31,6 +31,7 @@ public class AcpbUploader {
 	public static int uploadData(String deviceId) {
 		int ret = 0;
 		File uploadRootFolder = new File(uploadRoot);
+		Log.v(TAG, "uploading active probing files");
 		if (uploadRootFolder.isDirectory())
 		{
 			File [] files = uploadRootFolder.listFiles();
@@ -41,10 +42,11 @@ public class AcpbUploader {
 				client.setPassword(Utilities.FTPPassword);
 				client.connect();
 				for (File file: files) {
+					Log.v(TAG, "uploading " + file.getPath());
 					String remotePath = file.getName() + "-" + deviceId;
 					client.uploadFile(file.getPath(), remotePath, WriteMode.OVERWRITE);
+					Log.v(TAG, "finished uploading " + file.getPath());
 					file.delete();
-					break;
 				}
 			} catch (FTPException e) {
 				e.printStackTrace();

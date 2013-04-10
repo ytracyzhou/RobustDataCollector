@@ -52,7 +52,6 @@ public class SchedulerThread extends Thread {
 	final private static int INTERFACE_CHANGE_CHECK_INTERVAL = 10; // in seconds
 	final private static int DATA_STORAGE_CHECK_INTERVAL = 60; // in seconds
 	final private static int DATA_UPLOAD_CHECK_INTERVAL = 120; // in seconds
-	final private static int NEXT_UPLOAD_AFTER_ERROR_INTERVAL = 7200; // in seconds FENG_CHANGED, was 7200
 	final private static int SDCARD_CRITICAL_FOR_STOP_DATA_COLLECTION = 5;
 	final private static int SDCARD_CRITICAL_FOR_UPLOADING = 15; //FENG_CHANGED, was 15
 	public static String ACTIVE_PROBING_SERVER_NAME = "owl.eecs.umich.edu";
@@ -79,8 +78,6 @@ public class SchedulerThread extends Thread {
 	public static int plugged = -1;
 	private long sleepTimeTotal = 0;
 	private String deviceId = null;
-	private boolean hasError = false;
-	private long lastErrorTimestamp = -1;
 	
 	TelephonyManager telephonyManager = null;
 	InterfaceDetector interfaceDetector = null;
@@ -244,8 +241,6 @@ public class SchedulerThread extends Thread {
 					|| AcpbUploader.hasData() || UInpUploader.hasData()) {
 				
 				if (level <= UPLOADING_LOW_BATTERY_LEVEL && plugged <= 0) {
-					hasError = true;
-					lastErrorTimestamp = System.currentTimeMillis();
 					return;
 				}
 				long uploadStartTime = System.currentTimeMillis();
@@ -256,12 +251,7 @@ public class SchedulerThread extends Thread {
 				uploadStartTime = System.currentTimeMillis();
 				int error4 = UInpUploader.uploadData(deviceId, uploadStartTime);
 				Log.v(TAG, "error1: " + error1 + ", error2: " + error2 + ", error3: " + error3 + ", error4: " + error4);
-				if (error1 != 0 || error2 != 0 || error3 != 0 || error4 != 0) {
-					hasError = true;
-					lastErrorTimestamp = System.currentTimeMillis();
-				} else {
-					Utilities.setLastUploadTimestamp(System.currentTimeMillis());
-				}
+				Utilities.setLastUploadTimestamp(System.currentTimeMillis());
 			}
 			
 			Utilities.clearUploadingFlag();
@@ -349,13 +339,6 @@ public class SchedulerThread extends Thread {
 					if (!Utilities.readAcpbFlag()) {
 						long curTime = System.currentTimeMillis();
 						boolean shouldWait = false;
-						if (hasError == true) {
-							if (curTime - lastErrorTimestamp >= NEXT_UPLOAD_AFTER_ERROR_INTERVAL * 1000) {
-								hasError = false;
-							} else {
-								shouldWait = true;
-							}
-						}
 
 						long lastUploadTimestamp = Utilities.getLastUploadTimestamp();
 						long diff = curTime - lastUploadTimestamp;
