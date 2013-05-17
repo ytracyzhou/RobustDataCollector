@@ -22,6 +22,7 @@ import java.util.Enumeration;
 import edu.umich.robustdatacollector.passivemonitoring.NoInterfaceNameException;
 import edu.umich.robustdatacollector.scheduler.SchedulerThread;
 import edu.umich.robustdatacollector.TCPSettings;
+import edu.umich.robustdatacollector.Utilities;
 
 import android.content.Context;
 import android.os.Environment;
@@ -54,13 +55,14 @@ public class IMAPCollector {
 		{
 			throw new NoInterfaceNameException();
 		}
-		String cmd = "/data/local/imap-tcpdump -i " + interfaceName + " -C 1000 not src 141.212.110.239 and not dst 141.212.110.239 2>> /sdcard/imap.output";
+		String cmd = "/data/local/imap-tcpdump -i " + interfaceName + " -C 1000 not src " + Utilities.FTPServerName + " and not dst " + Utilities.FTPServerName;
 		try {
 			Log.v("tracyzhou", id + " Starting imap with cmd: " + cmd);
 			
 			DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
     		os.writeBytes(cmd + "\n");
     		os.flush();
+    		TCPSettings.changeTCPSettings(TCPSettings.TCP_SETTINGS_CONG_CTRL, String.valueOf(SchedulerThread.TCP_CONG_CTRL));
     		TCPSettings.changeTCPSettings(TCPSettings.TCP_SETTINGS_ICW, String.valueOf(SchedulerThread.TCP_ICW));
     		String curICW = TCPSettings.currentTCPSettings(TCPSettings.TCP_SETTINGS_ICW);
     		String curCC = TCPSettings.currentTCPSettings(TCPSettings.TCP_SETTINGS_CONG_CTRL);
@@ -74,26 +76,24 @@ public class IMAPCollector {
 				logfile.createNewFile();
 			FileWriter fw = new FileWriter(Environment.getExternalStorageDirectory().getPath() + "/curtcpsetting", true);
 			PrintWriter bw = new PrintWriter(new BufferedWriter(fw));
+			long curTime = System.currentTimeMillis();
+			String result = "[" + curTime + "]";
 			if (curICW != null) {
-				bw.println("[" + System.currentTimeMillis() + "][Current ICW]" + curICW);
-				bw.flush();	
+				result += "[Current ICW]" + curICW;
 			}
 			if (curCC != null) {
-				bw.println("[" + System.currentTimeMillis() + "][Current CC]" + curCC);
-				bw.flush();	
+				result += "[Current CC]" + curCC;
 			}
 			if (curRMEM != null) {
-				bw.println("[" + System.currentTimeMillis() + "][Current RMEM]" + curRMEM);
-				bw.flush();	
+				result += "[Current RMEM]" + curRMEM;
 			}
 			if (curWMEM != null) {
-				bw.println("[" + System.currentTimeMillis() + "][Current WMEM]" + curWMEM);
-				bw.flush();	
+				result += "[Current WMEM]" + curWMEM;
 			}
 			if (curIProute != null) {
-				bw.println("[" + System.currentTimeMillis() + "][Current IProute]" + curIProute);
-				bw.flush();	
+				result += "[Current IProute]" + curIProute;
 			}
+			bw.println(result);
 			bw.close();
 		} catch (IOException e) {
 			e.printStackTrace();

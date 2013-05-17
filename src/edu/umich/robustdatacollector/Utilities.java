@@ -26,9 +26,9 @@ public class Utilities {
 	
 	private final static int IDLE_THRESHOLD_BY_BYTES = 100000;	//100KB (in recent 180s)
 	private static long lastUploadTimestamp = -1;
-	public final static String FTPServerName = "141.212.110.239";
-	public final static String FTPUsername = "tracyzhou";
-	public final static String FTPPassword = "robustnet";
+	public static String FTPServerName = "141.212.110.231";
+	public static String FTPUsername = "tracyzhou";
+	public static String FTPPassword = "robustnet";
 	
 	public static boolean lastUploadTimestampExists() {
 		File file = new File(Environment.getExternalStorageDirectory().getPath() + "/lastUploadTimestamp");

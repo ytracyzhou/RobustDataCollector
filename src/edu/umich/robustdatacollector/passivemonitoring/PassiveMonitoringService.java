@@ -358,13 +358,18 @@ public class PassiveMonitoringService extends Service {
 		} catch (Exception e) {
 			Log.e(TAG, "exception in getSoftwareVersion", e);
 		}
-		
 		writeTraceLineToTraceFile(mDeviceInfoWriter, softwareVersion, false);
+		
+		String lineNum = mTelephonyManager.getLine1Number();
+		if (lineNum == null) {
+			lineNum = "unknown";
+		}
+		writeTraceLineToTraceFile(mDeviceInfoWriter, lineNum, false);
 		
 		String ipAddress;
 		try {
 			ipAddress = getLocalIpAddress();
-			if (ipAddress != null) {
+			if (ipAddress == null) {
 				writeTraceLineToTraceFile(mDeviceInfoWriter, ipAddress, false);
 			}
 		} catch (SocketException e) {
@@ -514,6 +519,7 @@ public class PassiveMonitoringService extends Service {
 		checkActiveProcessesTimer.scheduleAtFixedRate(new TimerTask() {
 			public void run() {
 				List<RunningAppProcessInfo> activeProcesses = mActivityManager.getRunningAppProcesses();
+				String processResult = "";
 				for (Iterator<RunningAppProcessInfo> iter = activeProcesses.iterator(); iter.hasNext();) {
 					RunningAppProcessInfo runningAppProcessInfo = (RunningAppProcessInfo) iter.next();
 					String pProcessName = runningAppProcessInfo.processName;
@@ -537,28 +543,26 @@ public class PassiveMonitoringService extends Service {
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
-					}	
-					writeTraceLineToTraceFile(mActiveProcessTracewriter, pProcessName +
-											" " + pImportance +
-											" " + pImportanceReasonCode +
-											" " + importanceReasonPid +
-											" " + pid + " " + uid +
-											" " + utime + " " + stime +
-											" " + TrafficStats.getUidRxBytes(uid) +
-											" " + TrafficStats.getUidRxPackets(uid) + 
-											" " + TrafficStats.getUidTxBytes(uid) +
-											" " + TrafficStats.getUidTxPackets(uid) +
-											" " + TrafficStats.getUidTcpRxBytes(uid) +
-											" " + TrafficStats.getUidTcpRxSegments(uid) + 
-											" " + TrafficStats.getUidTcpTxBytes(uid) +
-											" " + TrafficStats.getUidTcpTxSegments(uid) +
-											" " + TrafficStats.getUidUdpRxBytes(uid) +
-											" " + TrafficStats.getUidUdpRxPackets(uid) + 
-											" " + TrafficStats.getUidUdpTxBytes(uid) +
-											" " + TrafficStats.getUidUdpTxPackets(uid), true);
+					}
+					processResult += pProcessName + " " + pImportance + " " + pImportanceReasonCode +
+								" " + importanceReasonPid +	" " + pid + " " + uid +	" " + utime + " " + stime +
+								" " + TrafficStats.getUidRxBytes(uid) +
+								" " + TrafficStats.getUidRxPackets(uid) + 
+								" " + TrafficStats.getUidTxBytes(uid) +
+								" " + TrafficStats.getUidTxPackets(uid) +
+								" " + TrafficStats.getUidTcpRxBytes(uid) +
+								" " + TrafficStats.getUidTcpRxSegments(uid) + 
+								" " + TrafficStats.getUidTcpTxBytes(uid) +
+								" " + TrafficStats.getUidTcpTxSegments(uid) +
+								" " + TrafficStats.getUidUdpRxBytes(uid) +
+								" " + TrafficStats.getUidUdpRxPackets(uid) + 
+								" " + TrafficStats.getUidUdpTxBytes(uid) +
+								" " + TrafficStats.getUidUdpTxPackets(uid) + '\t';
 				}
+				if (processResult != "")
+					writeTraceLineToTraceFile(mActiveProcessTracewriter, processResult, true);
 			}
-		}, 0, 5000);
+		}, 0, 10000);
 	}
 	
 	private void stopActiveProcessesTrace() {
@@ -685,86 +689,84 @@ public class PassiveMonitoringService extends Service {
 		checkCpuAndMemTimer.scheduleAtFixedRate(new TimerTask() {
 			@Override
 			public void run() {
-				getCPUInfo();
-				getMemInfo();
+				double cpufreq1 = -1;
+				double cpufreq2 = -1;
+				long usr = -1;
+				long sys = -1;
+				long total = -1;
+				
+				try {
+					BufferedReader br1 = new BufferedReader(new FileReader("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"));
+					cpufreq1 = Long.parseLong(br1.readLine()) / 1000.0;
+					br1.close();
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				try {
+					BufferedReader br2 = new BufferedReader(new FileReader("/sys/devices/system/cpu/cpu1/cpufreq/scaling_cur_freq"));
+					cpufreq2 = Long.parseLong(br2.readLine()) / 1000.0;
+					br2.close();
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					//e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				try {
+					BufferedReader br = new BufferedReader(new FileReader("/proc/stat"));
+					String cpuinfoResult = br.readLine();
+					String [] timeStr = cpuinfoResult.split(" ");
+					long [] times = new long[7];
+					for (int i = 0; i < 7; i++) {
+						times[i] = Long.parseLong(timeStr[i + 2]);
+					}
+					br.close();
+					usr = times[0] + times[1];
+					sys = times[2] + times[5] + times[6];
+					total = usr + sys + times[3] + times[4];
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				String memresult = "";
+				
+				try {
+					BufferedReader br = new BufferedReader(new FileReader("/proc/meminfo"));
+					for (int i = 0; i < 4; i++) {
+						String str = br.readLine();
+						String [] splittedWords = str.split(" ");
+						memresult += splittedWords[splittedWords.length - 2];
+						if (i < 3)
+							memresult += " ";				
+					}
+					br.close();
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				writeTraceLineToTraceFile(mCpuAndMemTracewriter, usr + " " + sys
+						+ " " + total + " " + cpufreq1 + " " + cpufreq2 + " " + memresult, true);
 			}
-		}, 0, 1000);
+		}, 0, 10000);
 	}
 	
 	private void stopCpuAndMemMonitor() {
 		checkCpuAndMemTimer.cancel();
-	}
-	
-	private void getCPUInfo() {
-		double cpufreq1 = -1;
-		double cpufreq2 = -1;
-		long usr = -1;
-		long sys = -1;
-		long total = -1;
-		
-		try {
-			BufferedReader br1 = new BufferedReader(new FileReader("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"));
-			cpufreq1 = Long.parseLong(br1.readLine()) / 1000.0;
-			br1.close();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		try {
-			BufferedReader br2 = new BufferedReader(new FileReader("/sys/devices/system/cpu/cpu1/cpufreq/scaling_cur_freq"));
-			cpufreq2 = Long.parseLong(br2.readLine()) / 1000.0;
-			br2.close();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			//e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		try {
-			BufferedReader br = new BufferedReader(new FileReader("/proc/stat"));
-			String cpuinfoResult = br.readLine();
-			String [] timeStr = cpuinfoResult.split(" ");
-			long [] times = new long[7];
-			for (int i = 0; i < 7; i++) {
-				times[i] = Long.parseLong(timeStr[i + 2]);
-			}
-			br.close();
-			usr = times[0] + times[1];
-			sys = times[2] + times[5] + times[6];
-			total = usr + sys + times[3] + times[4];
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		writeTraceLineToTraceFile(mCpuAndMemTracewriter, usr + " " + sys
-				+ " " + total + " " + cpufreq1 + " " + cpufreq2, true);
-	}
-	
-	private void getMemInfo() {
-		try {
-			BufferedReader br = new BufferedReader(new FileReader("/proc/meminfo"));
-			for (int i = 0; i < 4; i++) {
-				String str = br.readLine();
-				writeTraceLineToTraceFile(mCpuAndMemTracewriter, str, true);
-			}
-			br.close();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 	
 	private PhoneStateListener mPhoneStateListener = new PhoneStateListener() {

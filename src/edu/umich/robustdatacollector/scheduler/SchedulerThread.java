@@ -6,8 +6,11 @@
 
 package edu.umich.robustdatacollector.scheduler;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Calendar;
 
 import org.dom4j.Document;
@@ -59,12 +62,12 @@ public class SchedulerThread extends Thread {
 	public static int ACTIVE_PROBING_AFTER_FRQ = 600;
 	public static int ACTIVE_PROBING_LOW_BATTERY_LEVEL = 15;
 	private static int UPLOADING_LOW_BATTERY_LEVEL = 10;
-	private static int TWO_UPLOADS_MIN_INTERVAL = 7200; // in seconds FENG_CHANGED, was 7200
+	private static int TWO_UPLOADS_MIN_INTERVAL = 3600; // in seconds FENG_CHANGED, was 7200
 	private static int TWO_UPLOADS_MAX_INTERVAL = 86400; // in seconds
 	public static int UPLOADING_IMAP_DURATION = 300;
 	public static int UPLOADING_PSMN_DURATION = 300;
 	public static int UPLOADING_UINP_DURATION = 300;
-	private static int TCP_CONG_CTRL = 1;
+	public static int TCP_CONG_CTRL = 1;
 	public static int TCP_ICW = 10;
 	
 	private ResourceLock resourceLock = null;
@@ -127,6 +130,7 @@ public class SchedulerThread extends Thread {
 				Element uploadIMAPElm = uploadElm.element("imapduration");
 				Element uploadPsmnElm = uploadElm.element("psmnduration");
 				Element uploadUInpElm = uploadElm.element("uinpduration");
+				Element uploadServerElm = uploadElm.element("server");
 				
 				Element tcpElm = rootElm.element("tcp");
 				Element ccElm = tcpElm.element("cc");
@@ -143,11 +147,46 @@ public class SchedulerThread extends Thread {
 				UPLOADING_IMAP_DURATION = Integer.valueOf(uploadIMAPElm.getText());
 				UPLOADING_PSMN_DURATION = Integer.valueOf(uploadPsmnElm.getText());
 				UPLOADING_UINP_DURATION = Integer.valueOf(uploadUInpElm.getText());
+				Utilities.FTPServerName = uploadServerElm.getText();
 				
 				TCP_CONG_CTRL = Integer.valueOf(ccElm.getText());
 				TCP_ICW = Integer.valueOf(icwElm.getText());
 				TCPSettings.changeTCPSettings(TCPSettings.TCP_SETTINGS_CONG_CTRL, String.valueOf(TCP_CONG_CTRL));
 				TCPSettings.changeTCPSettings(TCPSettings.TCP_SETTINGS_ICW, String.valueOf(TCP_ICW));
+	    		String curICW = TCPSettings.currentTCPSettings(TCPSettings.TCP_SETTINGS_ICW);
+	    		String curCC = TCPSettings.currentTCPSettings(TCPSettings.TCP_SETTINGS_CONG_CTRL);
+	    		String curRMEM = TCPSettings.currentTCPSettings(TCPSettings.TCP_SETTINGS_RMEM);
+	    		String curWMEM = TCPSettings.currentTCPSettings(TCPSettings.TCP_SETTINGS_WMEM);
+	    		String curIProute = TCPSettings.currentTCPSettings(TCPSettings.TCP_SETTINGS_IPROUTE);
+	    		if (curICW == null && curCC == null && curRMEM == null && curWMEM == null && curIProute == null)
+	    			return;
+	    		try {
+		    		File logfile = new File(Environment.getExternalStorageDirectory().getPath() + "/curtcpsetting");
+					if (!logfile.exists())
+						logfile.createNewFile();
+					FileWriter fw = new FileWriter(Environment.getExternalStorageDirectory().getPath() + "/curtcpsetting", true);
+					PrintWriter bw = new PrintWriter(new BufferedWriter(fw));
+					String result = "[" + System.currentTimeMillis() + "]";
+					if (curICW != null) {
+						result += "[Current ICW]" + curICW;
+					}
+					if (curCC != null) {
+						result += "[Current CC]" + curCC;
+					}
+					if (curRMEM != null) {
+						result += "[Current RMEM]" + curRMEM;
+					}
+					if (curWMEM != null) {
+						result += "[Current WMEM]" + curWMEM;
+					}
+					if (curIProute != null) {
+						result += "[Current IProute]" + curIProute;
+					}
+					bw.println(result);
+					bw.close();
+	    		} catch (IOException e) {
+	    			e.printStackTrace();
+	    		}
 			} catch (DocumentException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -271,9 +310,17 @@ public class SchedulerThread extends Thread {
     			AlarmManager alarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
     			Intent activeProbingIntent = new Intent(context, ActiveProbingReceiver.class);
     			PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 100, activeProbingIntent, 0);
-    			alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
-    					System.currentTimeMillis() + ACTIVE_PROBING_FRQ * 1000,
-    					ACTIVE_PROBING_AFTER_FRQ * 1000, pendingIntent);
+    			Calendar calendar = Calendar.getInstance();
+    			int hour = calendar.get(Calendar.HOUR_OF_DAY);
+    			if (hour >= 2 && hour <= 7) {
+    				alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
+    						System.currentTimeMillis() + ACTIVE_PROBING_FRQ * 1000,
+    						ACTIVE_PROBING_AFTER_FRQ * 1000, pendingIntent);
+    			} else {
+    				alarmManager.setRepeating(AlarmManager.RTC_WAKEUP,
+    						System.currentTimeMillis() + ACTIVE_PROBING_FRQ * 500,
+    						ACTIVE_PROBING_AFTER_FRQ * 500, pendingIntent);
+    			}
 	        } else if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
 	        	boolean storageCritical = Utilities.isStorageCritical(SDCARD_CRITICAL_FOR_STOP_DATA_COLLECTION);
 	        	AlarmManager alarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
