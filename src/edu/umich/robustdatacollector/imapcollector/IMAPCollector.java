@@ -13,19 +13,15 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
 
-import edu.umich.robustdatacollector.passivemonitoring.NoInterfaceNameException;
-import edu.umich.robustdatacollector.scheduler.SchedulerThread;
-import edu.umich.robustdatacollector.TCPSettings;
 import edu.umich.robustdatacollector.Utilities;
-
+import edu.umich.robustdatacollector.passivemonitoring.NoInterfaceNameException;
+//import edu.umich.robustdatacollector.TCPSettings;
 import android.content.Context;
-import android.os.Environment;
 import android.util.Log;
 
 public class IMAPCollector {
@@ -55,14 +51,14 @@ public class IMAPCollector {
 		{
 			throw new NoInterfaceNameException();
 		}
-		String cmd = "/data/local/imap-tcpdump -i " + interfaceName + " -C 1000 not src " + Utilities.FTPServerName + " and not dst " + Utilities.FTPServerName;
+		String cmd = "/data/local/imap-tcpdump -i " + interfaceName + " -C 3000 not src " + Utilities.FTPServerName + " and not dst " + Utilities.FTPServerName;
 		try {
 			Log.v("tracyzhou", id + " Starting imap with cmd: " + cmd);
 			
 			DataOutputStream os = new DataOutputStream(rootProcess.getOutputStream());
     		os.writeBytes(cmd + "\n");
     		os.flush();
-    		TCPSettings.changeTCPSettings(TCPSettings.TCP_SETTINGS_CONG_CTRL, String.valueOf(SchedulerThread.TCP_CONG_CTRL));
+    		/*TCPSettings.changeTCPSettings(TCPSettings.TCP_SETTINGS_CONG_CTRL, String.valueOf(SchedulerThread.TCP_CONG_CTRL));
     		TCPSettings.changeTCPSettings(TCPSettings.TCP_SETTINGS_ICW, String.valueOf(SchedulerThread.TCP_ICW));
     		String curICW = TCPSettings.currentTCPSettings(TCPSettings.TCP_SETTINGS_ICW);
     		String curCC = TCPSettings.currentTCPSettings(TCPSettings.TCP_SETTINGS_CONG_CTRL);
@@ -94,7 +90,7 @@ public class IMAPCollector {
 				result += "[Current IProute]" + curIProute;
 			}
 			bw.println(result);
-			bw.close();
+			bw.close();*/
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -183,7 +179,6 @@ public class IMAPCollector {
 				            }
 				        }
 			        }
-			        
 			    }
 			}
 		} catch (SocketException e) {
@@ -192,5 +187,4 @@ public class IMAPCollector {
 		}
 		return interfaceName;
 	}
-	
 }

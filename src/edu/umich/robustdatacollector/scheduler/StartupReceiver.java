@@ -15,14 +15,12 @@ import android.util.Log;
 
 public class StartupReceiver extends BroadcastReceiver {
 
-	private static String TAG = "tracyzhou";
-	
-	@Override
-	public void onReceive(Context context, Intent intent) {
-		Log.v(TAG, "receive broadcast in startup receiver!");
-		RobustDataCollector.enablePeriodicCheck(context);
-		Intent schedulerService = new Intent(context, SchedulerService.class);
-		context.startService(schedulerService);
-	}
-
+    private static String TAG = "tracyzhou";
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        Log.v(TAG, "receive broadcast in startup receiver!");
+        RobustDataCollector.enablePeriodicCheck(context);
+        Intent schedulerService = new Intent(context, SchedulerService.class);
+        context.startService(schedulerService);
+    }
 }

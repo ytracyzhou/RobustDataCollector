@@ -26,9 +26,9 @@ public class Utilities {
 	
 	private final static int IDLE_THRESHOLD_BY_BYTES = 100000;	//100KB (in recent 180s)
 	private static long lastUploadTimestamp = -1;
-	public static String FTPServerName = "141.212.110.231";
-	public static String FTPUsername = "tracyzhou";
-	public static String FTPPassword = "robustnet";
+    final public static String FTPServerName = "141.212.110.143";
+    final public static String FTPUsername = "tracyzhou";
+    final public static String FTPPassword = "robustnet";
 	
 	public static boolean lastUploadTimestampExists() {
 		File file = new File(Environment.getExternalStorageDirectory().getPath() + "/lastUploadTimestamp");
@@ -108,38 +108,17 @@ public class Utilities {
 	
 	public static void setUploadingFlag() {
 		File file = new File(Environment.getExternalStorageDirectory().getPath() + "/isUploading");
-		File logfile = new File(Environment.getExternalStorageDirectory().getPath() + "/uploadlog");
 		try {
 			file.createNewFile();
-			if (!logfile.exists())
-				logfile.createNewFile();
-			FileWriter fw = new FileWriter(Environment.getExternalStorageDirectory().getPath() + "/uploadlog", true);
-			PrintWriter bw = new PrintWriter(new BufferedWriter(fw));
-			bw.println("[Start Uploading]" + String.valueOf(System.currentTimeMillis()));
-			bw.flush();
-			bw.close();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+	    }
 	}
 	
 	public static void clearUploadingFlag() {
 		File file = new File(Environment.getExternalStorageDirectory().getPath() + "/isUploading");
-		File logfile = new File(Environment.getExternalStorageDirectory().getPath() + "/uploadlog");
 		if (file.exists())
 			file.delete();
-		try {
-			if (!logfile.exists())
-				logfile.createNewFile();
-			FileWriter fw = new FileWriter(Environment.getExternalStorageDirectory().getPath() + "/uploadlog", true);
-			PrintWriter bw = new PrintWriter(new BufferedWriter(fw));
-			bw.println("[End Uploading]" + String.valueOf(System.currentTimeMillis()));
-			bw.flush();			
-			bw.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 	
 	public static boolean isUserIdle() {
@@ -205,5 +184,28 @@ public class Utilities {
 				zipFile.delete();
 			return false;
 		}
+	}
+	
+	public static void writeUploadLog(String startOrEnd) {
+        File logfile = new File(Environment.getExternalStorageDirectory().getPath() + "/uploadlog");
+        if (!logfile.exists()) {
+            try {
+                logfile.createNewFile();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        try {
+            FileWriter fw = new FileWriter(Environment.getExternalStorageDirectory().getPath() + "/uploadlog", true);
+            PrintWriter bw = new PrintWriter(new BufferedWriter(fw));
+            bw.println(startOrEnd + "\t" + System.currentTimeMillis());
+            bw.flush();
+            bw.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
 	}
 }

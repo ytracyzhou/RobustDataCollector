@@ -14,11 +14,10 @@ import android.util.Log;
 
 public class SchedulerPeriodicChecker extends BroadcastReceiver {
 
-	@Override
-	public void onReceive(Context context, Intent intent) {
-		Log.v("tracyzhou", "receive broadcast in scheduler periodic checker!");
-		Intent schedulerService = new Intent(context, SchedulerService.class);
-		context.startService(schedulerService);
-	}
-
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        Log.v("tracyzhou", "receive broadcast in scheduler periodic checker!");
+        Intent schedulerService = new Intent(context, SchedulerService.class);
+        context.startService(schedulerService);
+    }
 }
