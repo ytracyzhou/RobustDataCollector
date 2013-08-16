@@ -1,7 +1,3 @@
-mount -o rw,remount -t yaffs2 /dev/block/mtdblock1 /system
-cat  /sdcard/imap-tcpdump  > /system/bin/imap-tcpdump
-chmod 777 /system/bin/imap-tcpdump
-mount -o ro,remount -t yaffs2 /dev/block/mtdblock1 /system
 cat /sdcard/imap-tcpdump > /data/local/imap-tcpdump
 chmod 777 /data/local/imap-tcpdump
 mkdir /data/local/UserInput
